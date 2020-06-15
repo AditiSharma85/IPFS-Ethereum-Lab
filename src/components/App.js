@@ -1,8 +1,44 @@
 import React, { Component } from 'react';
-import logo from '../logo.png';
 import './App.css';
-
+const ipfsClient = require('ipfs-http-client')
+const ipfs =ipfsClient({host: 'ipfs.infura.io', port: 5001, protocol: 'https'})
 class App extends Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      buffer: null,
+      ipfsHash: 'QmdYMzY6oEejiaa5WKeo26AxsGvPNerP64xff4nLv4y842'
+    };
+  }
+  captureFile = (event) => {
+    event.preventDefault()
+    //Process file for IPFS
+    const file = event.target.files[0]
+    const reader = new window.FileReader()
+    reader.readAsArrayBuffer(file)
+    reader.onloadend = () =>{
+      this.setState({'buffer': Buffer(reader.result)})
+    }
+    
+  }
+  // Example hash: "QmdYMzY6oEejiaa5WKeo26AxsGvPNerP64xff4nLv4y842"
+  // Example url: https://ipfs.infura.io/ipfs/QmdYMzY6oEejiaa5WKeo26AxsGvPNerP64xff4nLv4y842
+
+  onSubmit = (event) => {
+    event.preventDefault()
+    console.log("Submitting the form..")
+    ipfs.add(this.state.buffer, (error, result) => {
+      console.log('ipfs result', result)
+      const ipfsHash = result[0].hash
+      this.setState({ipfsHash: ipfsHash})
+      if(error){
+        console.error(error)
+        return
+      }
+    })
+
+  }
   render() {
     return (
       <div>
@@ -13,7 +49,7 @@ class App extends Component {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Dapp University
+            IPFS Ethereum 
           </a>
         </nav>
         <div className="container-fluid mt-5">
@@ -25,21 +61,14 @@ class App extends Component {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <img src={logo} className="App-logo" alt="logo" />
+                  <img src={`https://ipfs.infura.io/ipfs/${this.state.ipfsHash}`} />
                 </a>
-                <h1>Dapp University Starter Kit</h1>
-                <p>
-                  Edit <code>src/components/App.js</code> and save to reload.
-                </p>
-                <a
-                  className="App-link"
-                  href="http://www.dappuniversity.com/bootcamp"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  LEARN BLOCKCHAIN <u><b>NOW! </b></u>
-                </a>
-              </div>
+                <h3>Upload New Image</h3>
+                <form onSubmit={this.onSubmit}>
+                <input type='file' onChange={this.captureFile}/>
+            <input type='submit' />
+                </form>
+               </div>
             </main>
           </div>
         </div>
